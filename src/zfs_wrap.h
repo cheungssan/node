@@ -23,9 +23,6 @@ class Zfs {
   static void Init(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Read(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void AddonPath(const v8::FunctionCallbackInfo<v8::Value>& args);
-
- private:
-  static std::map<std::string, char*> fs_;
 };
 };  // namespace node
 
