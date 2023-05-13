@@ -42,9 +42,19 @@
             'zlib.h',
             'zutil.c',
             'zutil.h',
+            'contrib/minizip/crypt.h',
+            'contrib/minizip/ioapi.c',
+            'contrib/minizip/ioapi.h',
+            'contrib/minizip/mztools.c',
+            'contrib/minizip/mztools.h',
+            'contrib/minizip/unzip.c',
+            'contrib/minizip/unzip.h',
+            'contrib/minizip/zip.c',
+            'contrib/minizip/zip.h',
           ],
           'include_dirs': [
             '.',
+            '../v8',
           ],
           'direct_dependent_settings': {
             'include_dirs': [

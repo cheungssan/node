@@ -1,6 +1,7 @@
 #include "zfs_wrap.h"
 #include "env-inl.h"
 #include "util-inl.h"
+#include "minizip/unzip.h"
 #include "node_internals.h"
 #include "node_external_reference.h"
 
@@ -77,12 +78,58 @@ Zfs::Zfs(Environment* env)
 }
 
 void Zfs::Init(const FunctionCallbackInfo<Value>& args) {
-  // v8::Isolate* isolate = args.GetIsolate();
-  // v8::Local<String> str = String::NewFromUtf8(isolate, "hello world");
-  // args.GetReturnValue().Set(str);
+  const char *zipfile = "t.zip";
+    unzFile uf = unzOpen64(zipfile);
+    if (uf == NULL) {
+        printf("unzip failed\n");
+        return ;
+    }
+    unz_global_info64 info;
+    int err = unzGetGlobalInfo64(uf, &info);
+    if (err != UNZ_OK) {
+        printf("unzGetGlobalInfo64 failed\n");
+        return ;
+    }
+
+    v8::Isolate* isolate = args.GetIsolate();
+    for (int i=0;i<info.number_entry;i++){
+        char filename_inzip[256];
+        unz_file_info64 file_info;
+        err = unzGetCurrentFileInfo64(uf,&file_info,filename_inzip,sizeof(filename_inzip),NULL,0,NULL,0);
+        if (err !=UNZ_OK) {
+            printf("unzGetCurrentFileInfo64 failed\n");
+            return ;
+        }
+
+        printf (" file zip : %s\n", filename_inzip);
+        unzFile file;
+        err = unzOpenCurrentFile(&file);
+        char *content = new char[file_info.size_file_extra+1];
+        content[file_info.size_file_extra] = 0x0;
+        unzReadCurrentFile(file, content, file_info.size_file_extra);
+        std::string path(":/");
+        path += filename_inzip;
+
+        // fs_[path] = content;
+
+        if ((i+1)<info.number_entry) {
+            err = unzGoToNextFile(uf);
+            if (err!=UNZ_OK)
+            {
+                printf("error %d with zipfile in unzGoToNextFile\n",err);
+                break;
+            }
+        }
+    }
+    
+    printf("hello\n");
 }
 
 void Zfs::Read(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  node::Utf8Value filename(env->isolate(), args[0]);
+  std::string key(*filename);
+  // auto iter = fs_.find(filename);
   v8::Isolate* isolate = args.GetIsolate();
   v8::MaybeLocal<String> str = String::NewFromUtf8(isolate, "console.warn('in read')");
   args.GetReturnValue().Set(str.ToLocalChecked());
